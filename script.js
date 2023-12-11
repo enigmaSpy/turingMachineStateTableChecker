@@ -1,52 +1,88 @@
 const alphabetInput = document.querySelector(".form_alphabet");
 const mainContainer = document.querySelector(".main");
 const addButton = document.querySelector(".addState");
+const tape = document.querySelector(".tape");
 
-const createAlphabetColumn = () => {
-  if (alphabetInput.value === 0) return;
-
-  const alphabetChars = [
-    "Q",
-    "Φ",
-    ...alphabetInput.value
-      .replace(/,/g, "")
-      .split("")
-      .filter((char) => char !== ""),
-  ];
-
-  const alphabetColumn = alphabetChars
-    .map((item) => {
-      return `<tr class="turingColumn">
-                <td>${item}</td>
-            </tr>`;
-    })
-    .join("");
-
-  mainContainer.innerHTML = alphabetColumn;
+const turing = {
+  alphabet: [],
+  states: [],
 };
 
-let q = 0;
+const updateAlphabet = () => {
+  const alphabet = alphabetInput.value.replace(",", "").split("");
+  const alphabetSet = new Set(["#", ...alphabet]);
+  turing.alphabet = [...alphabetSet];
+};
 
-const createNewState = () => {
-  const turingColumns = document.querySelectorAll(".turingColumn");
-  turingColumns.forEach((column, index) => {
-    if (index === 0) {
-      column.innerHTML += `<td>q${q}</td>`;
-    } else {
-      column.innerHTML += "<td><input type='text' maxlength='5'></td>";
-    }
+const renderTable = () => {
+  mainContainer.innerHTML = "";
+  let tableHTML = "<thead><tr><th></th>";
+
+  turing.states.forEach((state) => {
+    tableHTML += `<th>${state.name}</th>`;
   });
 
-  q++;
+  tableHTML += "</tr></thead><tbody>";
+
+  turing.alphabet.forEach((symbol) => {
+    tableHTML += `<tr><td>${symbol}</td>`;
+    turing.states.forEach((state) => {
+      tableHTML += `<td><input type="text" class="transitionInput" data-state="${state.name}" data-symbol="${symbol}"></td>`;
+    });
+    tableHTML += "</tr>";
+  });
+
+  tableHTML += "</tbody>";
+  mainContainer.innerHTML = tableHTML;
+
+  // Add event listeners after rendering the table
+  const transitionInputs = document.querySelectorAll(".transitionInput");
+  transitionInputs.forEach((input) => {
+    input.addEventListener("input", () => {
+      const value = input.value.split(",");
+      const stateName = input.dataset.state;
+      const symbol = input.dataset.symbol;
+
+      const state = turing.states.find((s) => s.name === stateName);
+
+      if (state) {
+        const existingTransitionIndex = state.transitions.findIndex(
+          (t) => t[symbol]
+        );
+
+        if (existingTransitionIndex !== -1) {
+          state.transitions[existingTransitionIndex][symbol] = [...value];
+        } else {
+          state.transitions.push({
+            [symbol]: [...value],
+          });
+        }
+
+        console.log(turing.states);
+      }
+    });
+  });
 };
 
-addButton.addEventListener("click", (e) => {
-  e.preventDefault();
-  if (mainContainer.innerHTML === "") return false;
 
-  createNewState();
-});
+const addState = () => {
+  const state = {
+    name: `q${turing.states.length}`,
+    transitions: [],
+  };
+  turing.states.push(state);
+  renderTable();
+};
+
 
 alphabetInput.addEventListener("input", () => {
-  createAlphabetColumn();
+  updateAlphabet();
+  renderTable();
 });
+
+addButton.addEventListener("click", addState);
+
+// Initial rendering
+updateAlphabet();
+renderTable();
+updateState();

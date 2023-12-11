@@ -49,3 +49,6 @@ body{
     padding: 8px;
     min-width: 100px;
 }
+.wrong{
+  baqckground-color: #4caf50;
+}
